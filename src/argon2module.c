@@ -18,26 +18,37 @@
 // variants. It is the recommended choice for password hashing and password-based
 // key derivation.
 static PyObject *
-argon2_ihash (PyObject *self, PyObject *args) {
+argon2_ihash (PyObject *self, PyObject *args, PyObject *kwargs) {
+	// Clear the error indicator
+	PyErr_Clear();
 	// This will call argon2i_hash_raw() from the reference implementation.
 	// Input parameters
-	uint32_t t_cost = 0;
-	uint32_t m_cost = 0;
-	uint32_t parallelism = 0;
-	char *pwd = NULL;
+	const char *pwd = NULL;
 	size_t pwdlen = 0;
-	char *salt = NULL;
+	const char *salt = NULL;
 	size_t saltlen = 0;
-	size_t hashlen = 0;
+	size_t iterations = 512; // Default 512 iterations
+	size_t memcost = 128;    // Default 128 KiB memory cost
+	size_t parallelism = 1;  // Default 1 thread
+	size_t hashlen = 64;     // Default 64 bytes
 	// Output hash with its hash length
 	char *hash = NULL;
 	// The result of parsing will be stored here
-	int result = 0;
-	// Parse the input parameters
-	if (!(result = PyArg_ParseTuple(args, "kkky#y#K", &t_cost, &m_cost, &parallelism, &pwd, &pwdlen, &salt, &saltlen, &hashlen))) {
+	int result;
+	// Parse the positional and optional keyword arguments
+	static char *kwlist[] = {"pwd", "salt", "iterations", "memcost", "parallelism", "hashlen", NULL};
+	if (!(result = PyArg_ParseTupleAndKeywords(args, kwargs, "y#y#|KKKK", kwlist, &pwd, &pwdlen, &salt, &saltlen, &iterations, &memcost, &parallelism, &hashlen))) {
 		PyErr_SetString(PyExc_TypeError, "Could not parse the input parameters.");
 		return NULL;
 	}
+	// printf("\r\nTime cost: %llu\r\n", iterations);
+	// printf("Memory cost: %llu\r\n", memcost);
+	// printf("Parallelism: %llu\r\n", parallelism);
+	// printf("Password: %s\r\n", pwd);
+	// printf("Password length: %llu\r\n", pwdlen);
+	// printf("Salt: %s\r\n", salt);
+	// printf("Salt length: %llu\r\n", saltlen);
+	// printf("Hash length: %llu\r\n\r\n", hashlen);
 	// Allocate memory for the hash
 	hash = malloc(hashlen);
 	if (hash == NULL) {
@@ -45,9 +56,10 @@ argon2_ihash (PyObject *self, PyObject *args) {
 		return NULL;
 	}
 	// Call the Argon2i hash function
-	result = argon2i_hash_raw(t_cost, m_cost, parallelism, pwd, pwdlen, salt, saltlen, hash, hashlen);
+	result = argon2i_hash_raw((const uint32_t) iterations, (const uint32_t) memcost, (const uint32_t) parallelism, pwd, pwdlen, salt, saltlen, hash, hashlen);
 	if (result != ARGON2_OK) {
 		PyErr_SetString(PyExc_RuntimeError, "Could not hash the password.");
+		free(hash);
 		return NULL;
 	}
 	// Return the hash
@@ -61,36 +73,48 @@ argon2_ihash (PyObject *self, PyObject *args) {
 // resistant to tradeoff attacks. It is the recommended choice for password
 // hashing and password-based key derivation on GPU cracking machines.
 static PyObject *
-argon2_dhash (PyObject *self, PyObject *args) {
-	// This will call argon2d_hash_raw() from the reference implementation.
+argon2_dhash (PyObject *self, PyObject *args, PyObject *kwargs) {
+	// Clear the error indicator
+	PyErr_Clear();
+	// This will call argon2i_hash_raw() from the reference implementation.
 	// Input parameters
-	uint32_t t_cost = 0;
-	uint32_t m_cost = 0;
-	uint32_t parallelism = 0;
-	char *pwd = NULL;
+	const char *pwd = NULL;
 	size_t pwdlen = 0;
-	char *salt = NULL;
+	const char *salt = NULL;
 	size_t saltlen = 0;
-	size_t hashlen = 0;
+	size_t iterations = 512; // Default 512 iterations
+	size_t memcost = 128;    // Default 128 KiB memory cost
+	size_t parallelism = 1;  // Default 1 thread
+	size_t hashlen = 64;     // Default 64 bytes
 	// Output hash with its hash length
 	char *hash = NULL;
 	// The result of parsing will be stored here
-	int result = 0;
-	// Parse the input parameters
-	if (!(result = PyArg_ParseTuple(args, "kkky#y#K", &t_cost, &m_cost, &parallelism, &pwd, &pwdlen, &salt, &saltlen, &hashlen))) {
+	int result;
+	// Parse the positional and optional keyword arguments
+	static char *kwlist[] = {"pwd", "salt", "iterations", "memcost", "parallelism", "hashlen", NULL};
+	if (!(result = PyArg_ParseTupleAndKeywords(args, kwargs, "y#y#|KKKK", kwlist, &pwd, &pwdlen, &salt, &saltlen, &iterations, &memcost, &parallelism, &hashlen))) {
 		PyErr_SetString(PyExc_TypeError, "Could not parse the input parameters.");
 		return NULL;
 	}
+	// printf("\r\nTime cost: %llu\r\n", iterations);
+	// printf("Memory cost: %llu\r\n", memcost);
+	// printf("Parallelism: %llu\r\n", parallelism);
+	// printf("Password: %s\r\n", pwd);
+	// printf("Password length: %llu\r\n", pwdlen);
+	// printf("Salt: %s\r\n", salt);
+	// printf("Salt length: %llu\r\n", saltlen);
+	// printf("Hash length: %llu\r\n\r\n", hashlen);
 	// Allocate memory for the hash
 	hash = malloc(hashlen);
 	if (hash == NULL) {
 		PyErr_SetString(PyExc_MemoryError, "Could not allocate memory for the hash.");
 		return NULL;
 	}
-	// Call the Argon2d hash function
-	result = argon2d_hash_raw(t_cost, m_cost, parallelism, pwd, pwdlen, salt, saltlen, hash, hashlen);
+	// Call the Argon2i hash function
+	result = argon2d_hash_raw((const uint32_t) iterations, (const uint32_t) memcost, (const uint32_t) parallelism, pwd, pwdlen, salt, saltlen, hash, hashlen);
 	if (result != ARGON2_OK) {
 		PyErr_SetString(PyExc_RuntimeError, "Could not hash the password.");
+		free(hash);
 		return NULL;
 	}
 	// Return the hash
@@ -103,36 +127,48 @@ argon2_dhash (PyObject *self, PyObject *args) {
 // the safest of the three Argon2 variants, but it does provide a nice balance
 // between the two.
 static PyObject *
-argon2_idhash (PyObject *self, PyObject *args) {
-	// This will call argon2id_hash_raw() from the reference implementation.
+argon2_idhash (PyObject *self, PyObject *args, PyObject *kwargs) {
+	// Clear the error indicator
+	PyErr_Clear();
+	// This will call argon2i_hash_raw() from the reference implementation.
 	// Input parameters
-	uint32_t t_cost = 0;
-	uint32_t m_cost = 0;
-	uint32_t parallelism = 0;
-	char *pwd = NULL;
+	const char *pwd = NULL;
 	size_t pwdlen = 0;
-	char *salt = NULL;
+	const char *salt = NULL;
 	size_t saltlen = 0;
-	size_t hashlen = 0;
+	size_t iterations = 512; // Default 512 iterations
+	size_t memcost = 128;    // Default 128 KiB memory cost
+	size_t parallelism = 1;  // Default 1 thread
+	size_t hashlen = 64;     // Default 64 bytes
 	// Output hash with its hash length
 	char *hash = NULL;
 	// The result of parsing will be stored here
-	int result = 0;
-	// Parse the input parameters
-	if (!(result = PyArg_ParseTuple(args, "kkky#y#K", &t_cost, &m_cost, &parallelism, &pwd, &pwdlen, &salt, &saltlen, &hashlen))) {
+	int result;
+	// Parse the positional and optional keyword arguments
+	static char *kwlist[] = {"pwd", "salt", "iterations", "memcost", "parallelism", "hashlen", NULL};
+	if (!(result = PyArg_ParseTupleAndKeywords(args, kwargs, "y#y#|KKKK", kwlist, &pwd, &pwdlen, &salt, &saltlen, &iterations, &memcost, &parallelism, &hashlen))) {
 		PyErr_SetString(PyExc_TypeError, "Could not parse the input parameters.");
 		return NULL;
 	}
+	// printf("\r\nTime cost: %llu\r\n", iterations);
+	// printf("Memory cost: %llu\r\n", memcost);
+	// printf("Parallelism: %llu\r\n", parallelism);
+	// printf("Password: %s\r\n", pwd);
+	// printf("Password length: %llu\r\n", pwdlen);
+	// printf("Salt: %s\r\n", salt);
+	// printf("Salt length: %llu\r\n", saltlen);
+	// printf("Hash length: %llu\r\n\r\n", hashlen);
 	// Allocate memory for the hash
 	hash = malloc(hashlen);
 	if (hash == NULL) {
 		PyErr_SetString(PyExc_MemoryError, "Could not allocate memory for the hash.");
 		return NULL;
 	}
-	// Call the Argon2id hash function
-	result = argon2id_hash_raw(t_cost, m_cost, parallelism, pwd, pwdlen, salt, saltlen, hash, hashlen);
+	// Call the Argon2i hash function
+	result = argon2id_hash_raw((const uint32_t) iterations, (const uint32_t) memcost, (const uint32_t) parallelism, pwd, pwdlen, salt, saltlen, hash, hashlen);
 	if (result != ARGON2_OK) {
 		PyErr_SetString(PyExc_RuntimeError, "Could not hash the password.");
+		free(hash);
 		return NULL;
 	}
 	// Return the hash
@@ -140,9 +176,10 @@ argon2_idhash (PyObject *self, PyObject *args) {
 }
 
 static PyMethodDef Argon2Methods[] = {
-	{"ihash",  argon2_ihash, METH_VARARGS, "Argon2i hash function"},
-	{"dhash",  argon2_dhash, METH_VARARGS, "Argon2d hash function"},
-	{"idhash", argon2_idhash, METH_VARARGS, "Argon2id hash function"},
+	{"test", argon2_test, METH_VARARGS, "Test bytes argument parsing"},
+	{"ihash", (PyCFunction)(void(*)(void)) argon2_ihash, METH_VARARGS | METH_KEYWORDS, "Argon2i hash function"},
+	{"dhash", (PyCFunction)(void(*)(void)) argon2_dhash, METH_VARARGS | METH_KEYWORDS, "Argon2d hash function"},
+	{"idhash", (PyCFunction)(void(*)(void)) argon2_idhash, METH_VARARGS | METH_KEYWORDS, "Argon2id hash function"},
 	{NULL, NULL, 0, NULL}        /* Sentinel */
 };
 
