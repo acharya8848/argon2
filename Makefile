@@ -168,6 +168,14 @@ INST_PKGCONFIG = $(DESTDIR)$(PREFIX)/$(PKGCONFIG_REL)/pkgconfig
 .PHONY: all
 all: $(RUN) libs
 
+# Python targets
+.PHONY: pybuild
+pybuild: python setup.py build
+
+.PHONY: pyinstall
+pyinstall: build
+			python setup.py install
+
 .PHONY: libs
 libs: $(LIBRARIES) $(PC_NAME)
 
