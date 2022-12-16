@@ -6,3 +6,4 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "argon2py"  # as it would appear on PyPI
 version = "1.0.0"
+description = "Native implementation of 2015 PHC winner Argon2 password hashing algorithm in Python 3.x+"
