@@ -5,4 +5,4 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "argon2py"  # as it would appear on PyPI
-version = "0.01"
+version = "1.0.0"
